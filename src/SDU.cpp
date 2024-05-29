@@ -2,8 +2,6 @@
 // --- for SD-Updater -----
 // -----------------------------------------------------------
 #include <Arduino.h>
-#include <WiFi.h>
-#include <SD.h>
 #include <M5Unified.h>
 #include <ESP32-targz.h>
 #include <M5StackUpdater.h>
@@ -11,7 +9,6 @@
 
 const String PROG_NAME = "StackChan-Radiko";
 #define SDU_SKIP_TMR 5000 // skip timer : ms
-#define WIFI_TXT "/wifi.txt"   // 
 
 void SDU_lobby();
 
@@ -30,8 +27,11 @@ void SDU_lobby()
   Serial.println("SDU_lobby done");
 }
 
-// #define WIFI_SSID "aterm-d5c4c3-g"
-// #define WIFI_PASS "86c71a78ea6e1"
+
+#include <WiFi.h>
+#include <SD.h>
+#define WIFI_TXT "/wifi.txt" 
+
 extern String SSID;
 extern String SSID_PASS;
 void Wifi_setup2();
