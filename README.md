@@ -22,7 +22,7 @@ WiFiの設定は、robo8080さんのAiStackChan2で使用している"wifi.txt"�
 
 
 ## 基のリポジトリ
-- [M5Unified_StackChan_Radiko (robo8080さん)](https://github.com/robo8080/M5Unified_StackChan_Radiko)「MIT License」<br><br>
+- [M5Unified_StackChan_Radiko (robo8080さん)](https://github.com/robo8080/M5Unified_StackChan_Radiko)<br><br>
 
 
 ## 対応ハードウエア
@@ -31,12 +31,12 @@ WiFiの設定は、robo8080さんのAiStackChan2で使用している"wifi.txt"�
 ・M5Stack Core2 v1.1　（未確認）<br><br>
 
 ## 最新BINの取得
-このソフトをコンパイルした最新のBINファイルは、下記のリポジトリよりダウンロードできるようにしました。
+コンパイル済みの最新BINファイル("02-radiko.bin")は、下記のリポジトリから取得できます。
 - [BinsPack-for-StackChan-Core2](https://github.com/NoRi-230401/BinsPack-for-StackChan-Core2)<br><br>
 
 
 ## SD-Updaterについて
-tobozoさん開発。SDに複数のBINファイルを入れて、ソフトを切替えて使用できるようになります。<br>
+tobozoさん開発。SDにBINファイルを入れて、複数ソフトを切替えて使用できるようになります。<br>
 
  https://github.com/tobozo/M5Stack-SD-Updater<br><br>
 
