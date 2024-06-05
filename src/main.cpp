@@ -2,13 +2,13 @@
 // #define WIFI_PASS "SET YOUR WIFI PASS"
 // #define RADIKO_USER "SET YOUR MAIL-ADDRESS"
 // #define RADIKO_PASS "SET YOUR PREMIUM PASS"
-// #define USE_SERVO
 
+#define USE_SERVO
 #ifdef USE_SERVO
-// #define SERVO_PIN_X 13 // Core2 PORT C (BLUE)
-// #define SERVO_PIN_Y 14
-#define SERVO_PIN_X 33 // Core2 PORT A (RED)
-#define SERVO_PIN_Y 32
+// // #define SERVO_PIN_X 13 // Core2 PORT C (BLUE)
+// // #define SERVO_PIN_Y 14
+// #define SERVO_PIN_X 33 // Core2 PORT A (RED)
+// #define SERVO_PIN_Y 32
 #include <ServoEasing.hpp> // https://github.com/ArminJo/ServoEasing
 #endif
 
@@ -30,10 +30,14 @@
 #include "PaletteColor.h"
 
 // --------------------------------------
-//  "SDU.cpp"  ---  by NoRi 2024-05-29
+//  "SDU.cpp"  ---  by NoRi 2024-06-05
 // --------------------------------------
+bool USE_SERVO_ST = true;
+int SERVO_PIN_X = 13;
+int SERVO_PIN_Y = 14;
 String SSID = "";
 String SSID_PASS = "";
+extern bool servoTxtSDRead();
 extern void Wifi_setup2();
 extern void SDU_lobby();
 // --------------------------------------
@@ -531,27 +535,30 @@ void behavior(void *args)
       avatar->setRotation(0.0);
     }
 #ifdef USE_SERVO
-    if (!servo_home)
+    if (USE_SERVO_ST)
     {
-      servo_x.setEaseTo(START_DEGREE_VALUE_X + (int)(20.0 * gazeX));
-      if (gazeY < 0)
+      if (!servo_home)
       {
-        int tmp = (int)(15.0 * gazeY + open * 15.0);
-        if (tmp > 15)
-          tmp = 15;
-        servo_y.setEaseTo(START_DEGREE_VALUE_Y + tmp);
+        servo_x.setEaseTo(START_DEGREE_VALUE_X + (int)(20.0 * gazeX));
+        if (gazeY < 0)
+        {
+          int tmp = (int)(15.0 * gazeY + open * 15.0);
+          if (tmp > 15)
+            tmp = 15;
+          servo_y.setEaseTo(START_DEGREE_VALUE_Y + tmp);
+        }
+        else
+        {
+          servo_y.setEaseTo(START_DEGREE_VALUE_Y + (int)(10.0 * gazeY) - open * 15.0);
+        }
       }
       else
       {
-        servo_y.setEaseTo(START_DEGREE_VALUE_Y + (int)(10.0 * gazeY) - open * 15.0);
+        servo_x.setEaseTo(START_DEGREE_VALUE_X);
+        servo_y.setEaseTo(START_DEGREE_VALUE_Y);
       }
+      synchronizeAllServosStartAndWaitForAllServosToStop();
     }
-    else
-    {
-      servo_x.setEaseTo(START_DEGREE_VALUE_X);
-      servo_y.setEaseTo(START_DEGREE_VALUE_Y);
-    }
-    synchronizeAllServosStartAndWaitForAllServosToStop();
 #endif
     delay(50);
   }
@@ -560,17 +567,29 @@ void behavior(void *args)
 void Servo_setup()
 {
 #ifdef USE_SERVO
-  if (servo_x.attach(SERVO_PIN_X, START_DEGREE_VALUE_X, DEFAULT_MICROSECONDS_FOR_0_DEGREE, DEFAULT_MICROSECONDS_FOR_180_DEGREE))
+  if (USE_SERVO_ST)
   {
-    Serial.print("Error attaching servo x");
+    // -----------------------------------------------------------------------------------------------------------------------------------
+    // if (servo_x.attach(SERVO_PIN_X, START_DEGREE_VALUE_X, DEFAULT_MICROSECONDS_FOR_0_DEGREE, DEFAULT_MICROSECONDS_FOR_180_DEGREE))
+    // {
+    //   Serial.print("Error attaching servo x");
+    // }
+    // if (servo_y.attach(SERVO_PIN_Y, START_DEGREE_VALUE_Y, DEFAULT_MICROSECONDS_FOR_0_DEGREE, DEFAULT_MICROSECONDS_FOR_180_DEGREE))
+    // {
+    //   Serial.print("Error attaching servo y");
+    // }
+    // -----------------------------------------------------------------------------------------------------------------------------------
+    if (!servo_x.attach(SERVO_PIN_X, START_DEGREE_VALUE_X, DEFAULT_MICROSECONDS_FOR_0_DEGREE, DEFAULT_MICROSECONDS_FOR_180_DEGREE))
+      Serial.println("Error attaching servo x");
+
+    if (!servo_y.attach(SERVO_PIN_Y, START_DEGREE_VALUE_Y, DEFAULT_MICROSECONDS_FOR_0_DEGREE, DEFAULT_MICROSECONDS_FOR_180_DEGREE))
+      Serial.println("Error attaching servo y");
+    // -----------------------------------------------------------------------------------------------------------------------------------
+
+    servo_x.setEasingType(EASE_QUADRATIC_IN_OUT);
+    servo_y.setEasingType(EASE_QUADRATIC_IN_OUT);
+    setSpeedForAllServos(30);
   }
-  if (servo_y.attach(SERVO_PIN_Y, START_DEGREE_VALUE_Y, DEFAULT_MICROSECONDS_FOR_0_DEGREE, DEFAULT_MICROSECONDS_FOR_180_DEGREE))
-  {
-    Serial.print("Error attaching servo y");
-  }
-  servo_x.setEasingType(EASE_QUADRATIC_IN_OUT);
-  servo_y.setEasingType(EASE_QUADRATIC_IN_OUT);
-  setSpeedForAllServos(30);
 #endif
 }
 
@@ -770,6 +789,14 @@ void setup(void)
 
   // ***** for SD-Updater *********************
   SDU_lobby();
+
+  // read from SD: "/servo.txt" file
+  if (!servoTxtSDRead())
+  {
+    Serial.println("cannnot read servo.txt file ...");
+    SERVO_PIN_X = 13;
+    SERVO_PIN_Y = 14;
+  }
   // ******************************************
 
   M5.update();
@@ -1022,10 +1049,13 @@ void loop(void)
         // M5.Speaker.tone(1000, 100);
       }
 #ifdef USE_SERVO
-      if (box_servo.contain(t.x, t.y))
+      if (USE_SERVO_ST)
       {
-        servo_home = !servo_home;
-        // M5.Speaker.tone(1000, 100);
+        if (box_servo.contain(t.x, t.y))
+        {
+          servo_home = !servo_home;
+          // M5.Speaker.tone(1000, 100);
+        }
       }
 #endif
       if (box_balloon.contain(t.x, t.y) && !levelMeter)

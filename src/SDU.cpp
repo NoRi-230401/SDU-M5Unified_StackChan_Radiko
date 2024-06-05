@@ -5,12 +5,26 @@
 #include <M5Unified.h>
 #include <ESP32-targz.h>
 #include <M5StackUpdater.h>
+#include <SD.h>
+#include <WiFi.h>
+
 #define TFCARD_CS_PIN 4
+#define SDU_SKIP_TMR 5000 // skip timer : ms
+#define WIFI_TXT "/wifi.txt" 
+#define SERVO_TXT "/servo.txt"
+
+extern bool USE_SERVO_ST;
+extern int SERVO_PIN_X;
+extern int SERVO_PIN_Y;
+extern String SSID;
+extern String SSID_PASS;
+void SDU_lobby();
+bool SdBegin();
+void Wifi_setup2();
+bool wifiTxtSDRead();
+bool servoTxtSDRead();
 
 const String PROG_NAME = "StackChan_Radiko";
-#define SDU_SKIP_TMR 5000 // skip timer : ms
-
-void SDU_lobby();
 
 void SDU_lobby()
 {
@@ -28,15 +42,34 @@ void SDU_lobby()
 }
 
 
-#include <WiFi.h>
-#include <SD.h>
-#define WIFI_TXT "/wifi.txt" 
+bool SdBegin()
+{
+  // --- SD begin -------
+  int i = 0;
+  bool success = false;
+  Serial.println("SD.begin Start ...");
 
-extern String SSID;
-extern String SSID_PASS;
-void Wifi_setup2();
-bool wifiTxtSDRead();
-bool SdBegin();
+  while (i < 3)
+  { // SDカードマウント待ち
+    success = SD.begin(GPIO_NUM_4, SPI, 15000000U);
+    if (success)
+      return true;
+
+    Serial.println("SD Wait...");
+    delay(500);
+    i++;
+  }
+
+  if (i >= 3)
+  {
+    Serial.println("SD.begin faile ...");
+    return false;
+  }
+  else
+    return true;
+}
+
+
 
 void Wifi_setup2()
 {
@@ -167,33 +200,64 @@ bool wifiTxtSDRead()
 }
 
 
-bool SdBegin()
+bool servoTxtSDRead()
 {
-  // --- SD begin -------
-  int i = 0;
-  bool success = false;
-  Serial.println("SD.begin Start ...");
-
-  while (i < 3)
-  { // SDカードマウント待ち
-    // success = SD.begin(GPIO_NUM_4, SPI, 16000000,"/sd", 10, false);
-    // success = SD.begin(GPIO_NUM_4, SPI, 15000000U, "/sd", 10U, false);
-    // success = SD.begin(GPIO_NUM_4, SPI, 25000000U);
-    success = SD.begin(GPIO_NUM_4, SPI, 15000000U);
-
-    if (success)
-      return true;
-
-    Serial.println("SD Wait...");
-    delay(500);
-    i++;
-  }
-
-  if (i >= 3)
+  if (!SdBegin())
   {
-    Serial.println("SD.begin faile ...");
+    SD.end();
     return false;
   }
+
+  File fs = SD.open(SERVO_TXT, FILE_READ);
+  if (!fs)
+  {
+    SD.end();
+    return false;
+  }
+
+  size_t sz = fs.size();
+  char buf[sz + 1];
+  fs.read((uint8_t *)buf, sz);
+  buf[sz] = 0;
+  fs.close();
+
+  int y = 0;
+  int z = 0;
+  for (int x = 0; x < sz; x++)
+  {
+    if (buf[x] == 0x0a || buf[x] == 0x0d)
+      buf[x] = 0;
+    else if (!y && x > 0 && !buf[x - 1] && buf[x])
+      y = x;
+    else if (!z && x > 0 && !buf[x - 1] && buf[x])
+      z = x;
+  }
+
+  String SV_ON_OFF = "";
+  String SV_PORT_X = "";
+  String SV_PORT_Y = "";
+
+  SV_ON_OFF = String(buf);
+  SV_PORT_X = String(&buf[y]);
+  SV_PORT_Y = String(&buf[z]);
+
+  if (SV_ON_OFF == "on" || SV_ON_OFF == "ON")
+    USE_SERVO_ST = true;
   else
-    return true;
+    USE_SERVO_ST = false;
+
+  int sx = SV_PORT_X.toInt();
+  int sy = SV_PORT_Y.toInt();
+  if (sx != 0 && sy != 0)
+  {
+    SERVO_PIN_X = sx;
+    SERVO_PIN_Y = sy;
+  }
+
+  Serial.println("USE_SERVO   = " + SV_ON_OFF);
+  Serial.println("SERVO PIN_X = " + String(SERVO_PIN_X, 10));
+  Serial.println("SERVO PIN_Y = " + String(SERVO_PIN_Y, 10));
+
+  return true;
 }
+

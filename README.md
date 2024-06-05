@@ -5,20 +5,34 @@ SD-Updaterに対応したスタックチャンRadikoです。
 robo8080さんのソフトから次の修正を行いました。
 
 - SD-Updater対応。
-- SD直下のwifi.txt でWiFi設定をするように修正。
-- ボタン押下時のbeepを消音に変更。
-- サーボ動作は、OFFです。
+- WiFi設定は、SD直下のwifi.txt　ファイルでおこなう。<br>
+- サーボ設定は、SD直下の servo.txtファイルでおこなう。<br>
+- ボタン押下時のbeepを消音に変更。<br>
+<br>
 
 ブート時に、SD_Updater用の画面が立ち上がります。<br>
 SDに入れたソフトを切り替えることができるようになります。
 <br><br>
 
-<b>WiFi設定は、robo8080さんのAiStackChan2の設定ファイル"wifi.txt"を使用できるようにしました。</b><br>
+## 設定ファイル
+### WiFi設定 "wifi.txt"
+robo8080さんのAiStackChan2の設定ファイル"wifi.txt"を使用できるようにしました。</b><br>
 各自の設定に合わせてSD直下に"wifi.txt"の名前で保存してください。<br>
 - １行目：WiFi_SSID<br>
 - ２行目：WiFi_SSID_PASSWD<br>
 <br>
 <br>
+
+### Servo設定　"servo.txt"<br>
+Servo設定ファイル<br>
+- １行目(USE_SERVO)   ： "on" または、 "off"<br>
+- ２行目(SERVO_PIN_X) ： "13"(PortC)　または、"33"(PortA)<br>
+- ３行目(SERVO_PIN_Y) ： "14"(PortC)　または、"32"(PortA)<br>
+
+
+サンプルを用意しています。ファイル名を"servo.txt"に変更してご使用ください。<br>
+<br>
+<br><br>
 
 ソフトの操作方法は、下記のソフトを参照してください。
 <br>
